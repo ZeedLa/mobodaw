@@ -472,6 +472,18 @@ const SCALE_S={major:'MAJ',minor:'MIN',dorian:'DOR',phrygian:'PHR',lydian:'LYD',
 const inScale=n=>SCALES[S.scale].includes(((n-S.key)%12+12)%12);
 const N_LO=36,N_HI=84;
 
+/* ---- геометрия берётся из CSS-переменных, чтобы ноты/плейхед всегда попадали в сетку ---- */
+let P=13,RH=10,HHg=80;
+function refreshMetrics(){
+  const cs=getComputedStyle(document.documentElement);
+  const num=(n,f)=>{const v=parseFloat(cs.getPropertyValue(n));return isNaN(v)?f:v;};
+  HHg=num('--hh',80); RH=num('--rh',10);
+  P=num('--cw',12)+num('--gap',1);
+}
+window.addEventListener('resize',()=>{refreshMetrics();if(typeof renderGrid==='function')renderGrid();
+  if(rollTr&&$('#shRoll').classList.contains('open')){buildRoll();renderNotes();}});
+window.addEventListener('orientationchange',()=>setTimeout(refreshMetrics,120));
+
 /* ================= state ================= */
 const DEF={bpm:120,bars:2,key:9,scale:'minor',swing:0,
  master:{vol:.9,lo:0,mid:0,hi:0,thr:-16,rat:4,on:true,drive:1.6}};
@@ -640,7 +652,7 @@ function setPlayhead(i){if(i===lastVS)return;
  $$(`.cell[data-c="${i}"]`).forEach(c=>c.classList.add('ph'));
  if(lastVS>=0)$$(`.cell[data-c="${lastVS}"]`).forEach(c=>{if(c.dataset.c!=i)c.classList.remove('ph');});
  lastVS=i;
- const P=13,HH=80;const rm=$('#rmark');rm.style.display='block';rm.style.left=(HH+i*P+P/2-1)+'px';
+ const rm=$('#rmark');rm.style.display='block';rm.style.left=(HHg+i*P+P/2-1)+'px';
  const pc=$('#pcol');if($('#shRoll').classList.contains('open')){pc.style.display='block';pc.style.left=(i*P)+'px';}
  $('#posLbl').textContent=String(Math.floor(i/16)+1).padStart(3,'0')+'.'+(Math.floor(i/4)%4+1);
  const led=$('#led');if(i%4===0){led.classList.add('on');setTimeout(()=>led.classList.remove('on'),110);}}
@@ -688,9 +700,9 @@ const u8=b64=>{const s=atob(b64),a=new Uint8Array(s.length);for(let i=0;i<s.leng
 const b64=buf=>{const a=new Uint8Array(buf);let s='';for(let i=0;i<a.length;i+=0x8000)s+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000));return btoa(s);};
 
 /* ================= UI: grid ================= */
-function renderGrid(){const P=13,HH=80,W=HH+SONG()*P+10;
- let r=`<div class="ruler" style="width:${W}px"><div style="position:absolute;left:0;top:0;bottom:0;width:${HH}px;background:#151d26;border-right:1px solid var(--line)"></div>`;
- for(let k=0;k<S.bars;k++)r+=`<div class="rulb" style="left:${HH+k*16*P}px">Т.${k+1}</div>`;
+function renderGrid(){refreshMetrics();const W=HHg+SONG()*P+10;
+ let r=`<div class="ruler" style="width:${W}px"><div style="position:absolute;left:0;top:0;bottom:0;width:${HHg}px;background:#151d26;border-right:1px solid var(--line)"></div>`;
+ for(let k=0;k<S.bars;k++)r+=`<div class="rulb" style="left:${HHg+k*16*P}px">Т.${k+1}</div>`;
  r+=`<div id="rmark"></div></div>`;$('#ruler').outerHTML=r.replace('class="ruler"','class="ruler" id="ruler"');
  $('#rows').innerHTML=S.tracks.map(tr=>{
   const hue=hueOf(tr);let cells='';
@@ -757,10 +769,10 @@ $('#addList').addEventListener('click',e=>{const o=e.target.closest('.opt');if(!
  closeSheet('shAdd');renderGrid();renderMix();selectTrack(tr.id);markDirty();});
 
 /* ================= piano roll ================= */
-let rollTr=null,rollSnap=2,snapToScale=true;const P=13,RH=10;
+let rollTr=null,rollSnap=2,snapToScale=true;
 function openRoll(tr){rollTr=tr;$('#rollName').textContent=tr.name+' · PIANO ROLL';
  $('#rollInfo').textContent=tr.type==='sample'?'СЭМПЛ: '+((sampleById(tr.sound)||{}).name||'—'):PLUGS[tr.plug].name;
- updateRollScaleLbl();buildRoll();renderNotes();openSheet('shRoll');
+ updateRollScaleLbl();refreshMetrics();buildRoll();renderNotes();openSheet('shRoll');
  const sc=$('#rollsc');sc.scrollTop=(N_HI-66)*RH;sc.scrollLeft=0;}
 function updateRollScaleLbl(){$('#rollScale').textContent=KN[S.key]+' '+SCALE_N[S.scale];}
 function buildRoll(){const rows=N_HI-N_LO+1,W=SONG()*P;
@@ -998,6 +1010,7 @@ function demo(){stop();S=JSON.parse(JSON.stringify(DEF));S.tracks=[];tid=1;
  renderAll();}
 
 /* ================= boot ================= */
+refreshMetrics();
 try{const auto=localStorage.getItem('volna_auto');
  if(auto){const p=JSON.parse(auto);
   (async()=>{await loadProject(p);toast('Восстановлен автосохранённый проект');})();}
