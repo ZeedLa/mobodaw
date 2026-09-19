@@ -39,6 +39,16 @@ input[type=text],input[type=range],select,button{touch-action:manipulation}
 .mono{font-family:var(--mono)}
 .dim{color:var(--dim)}
 
+/* ---------- принудительный ландшафт: портрет поворачиваем ---------- */
+@media (orientation: portrait) and (pointer: coarse){
+  body{
+    position:absolute;left:0;top:100%;
+    width:100vh;width:100dvh;
+    height:100vw;height:100dvw;
+    transform:rotate(-90deg);transform-origin:top left;
+  }
+}
+
 /* ---------- header ---------- */
 header{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:6px;
   padding:4px 8px 3px;padding-top:calc(4px + env(safe-area-inset-top));
@@ -148,7 +158,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;backg
 .btn.wide{width:100%}
 .btn[disabled]{opacity:.45;pointer-events:none}
 
-/* ---------- floating transport (всегда поверх всего) ---------- */
+/* ---------- floating transport ---------- */
 #fab{position:fixed;right:6px;bottom:calc(40px + env(safe-area-inset-bottom));z-index:80;display:flex;gap:4px;align-items:center}
 #fab button{border-radius:50%;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.55);transition:transform .07s}
 #fab button:active{transform:scale(.92)}
@@ -255,10 +265,13 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;backg
 .snbtn{border:1px solid var(--line);background:#1a232e;border-radius:5px;color:var(--dim);font-size:7.5px;font-weight:700;padding:3px 5px;cursor:pointer;font-family:var(--mono)}
 .snbtn.on{background:var(--amber);color:#241500;border-color:var(--amber)}
 .snbtn.scale.on{background:var(--cyan);color:#04202e;border-color:var(--cyan)}
+.snbtn.tl{font-size:10px;padding:3px 8px;font-family:var(--body)}
+.snbtn.tl.on{background:var(--mint);border-color:var(--mint);color:#04211a}
+.snbtn.tl#toolErase.on{background:var(--coral);border-color:var(--coral);color:#2a0703}
+.tsep{width:1px;height:12px;background:var(--line2);margin:0 2px;flex:none}
 .rollsc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:6px;background:#10161d}
 #rollinner{display:inline-flex;min-width:100%}
 #rkeys{position:sticky;left:0;z-index:8;width:34px;flex:none;background:#151d26;border-right:1px solid var(--line)}
-/* клавиши как в FL: белые / чёрные, буква+октава, граница октав */
 .rkey{height:var(--rh);display:flex;align-items:center;justify-content:flex-end;padding-right:3px;
   font-family:var(--mono);font-size:6px;color:#28323c;cursor:pointer;
   background:#e9eef4;border-bottom:1px solid #b7c1cb;font-weight:600;letter-spacing:-.2px}
@@ -270,6 +283,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;backg
 .rkey .sdot{width:3px;height:3px;border-radius:50%;background:#1493d4;margin-right:2px;box-shadow:0 0 2px #1493d4}
 .rkey.black .sdot{background:var(--cyan);box-shadow:0 0 2px var(--cyan)}
 #rbody{position:relative;flex:none}
+#rbodywrap{cursor:crosshair}
 .rrow{height:var(--rh);border-bottom:1px solid #182029}
 .rrow.grow{background:rgba(71,194,255,.075)}
 .rrow.trow{background:rgba(255,180,58,.10)}
@@ -278,6 +292,7 @@ input[type=range]::-moz-range-thumb{width:9px;height:9px;border-radius:50%;backg
 .note{position:absolute;height:calc(var(--rh) - 2px);margin-top:1px;border-radius:2px;pointer-events:auto;cursor:pointer;
   background:linear-gradient(#ffe0a3,var(--th));box-shadow:0 0 6px -1px var(--th),inset 0 1px 0 rgba(255,255,255,.5);
   animation:pop .15s ease}
+.note.drag{filter:brightness(1.35);box-shadow:0 0 10px 0 var(--th)}
 .hint{font-size:7.5px;color:var(--dim);text-align:center;padding-top:4px;line-height:1.4}
 .hint b{color:var(--cyan)}
 code.sdk{display:block;background:#0d1319;border:1px solid var(--line);border-radius:6px;padding:6px;
@@ -368,7 +383,6 @@ code.sdk{display:block;background:#0d1319;border:1px solid var(--line);border-ra
   <button class="tab" data-v="view-proj"><span class="ic">💾</span>ПРОЕКТ</button>
 </nav>
 
-<!-- плавающий транспорт: виден поверх всех окон, включая piano roll -->
 <div id="fab">
   <button id="fabStop" title="Стоп">■</button>
   <button id="fabPlay" title="Играть">▶</button>
@@ -382,6 +396,10 @@ code.sdk{display:block;background:#0d1319;border:1px solid var(--line);border-ra
     <button class="btn coral" id="rollClear" style="padding:5px 8px">CLEAR</button>
   </div>
   <div class="rollsnap" id="snapRow">
+    <button class="snbtn tl on" id="toolPen" title="Карандаш: ставит и двигает ноты">✏️</button>
+    <button class="snbtn tl" id="toolErase" title="Ластик: удаляет">✖</button>
+    <button class="snbtn tl" id="toolHand" title="Рука: листать">✋</button>
+    <span class="tsep"></span>
     <button class="snbtn" data-s="1">1/16</button><button class="snbtn on" data-s="2">1/8</button>
     <button class="snbtn" data-s="4">1/4</button><button class="snbtn" data-s="8">1/2</button>
     <button class="snbtn" data-s="16">ТАКТ</button>
@@ -391,7 +409,7 @@ code.sdk{display:block;background:#0d1319;border:1px solid var(--line);border-ra
   <div class="rollsc" id="rollsc"><div id="rollinner"><div id="rkeys"></div><div id="rbodywrap" style="position:relative">
     <div id="rrows"></div><div id="notelayer"></div><div id="pcol"></div>
   </div></div></div>
-  <div class="hint">ТАП — добавить / удалить ноту (длина = snap). Подсвечены ноты лада <b id="rollScale"></b> · «ЛАД» прилепляет ноты к гамме · жёлтая линия = граница октавы</div>
+  <div class="hint"><b>✏️</b> ставит ноты, рисует протяжкой и двигает их · <b>✖</b> удаляет тапом/протяжкой · <b>✋</b> листает · ноты прилипают к шагам и ладу <b id="rollScale"></b></div>
 </div></div>
 
 <!-- SETTINGS -->
@@ -419,8 +437,9 @@ code.sdk{display:block;background:#0d1319;border:1px solid var(--line);border-ra
 <div class="sheet" id="shHelp"><div class="bk" data-close></div><div class="panel"><div class="grab"></div>
   <div class="shhead"><div class="shtitle"><b>СПРАВКА · ПЛАГИНЫ</b></div><button class="btn" data-close style="padding:5px 10px">✕</button></div>
   <div class="hlp">
+    <p><b>Ориентация:</b> приложение всегда работает в ландшафте — в портрете картинка поворачивается автоматически.</p>
     <p><b>Сетка:</b> тап по клетке ставит удар (повторный тап меняет громкость 2→3→1→0). На компьютере можно «рисовать» зажатой мышью, правая кнопка — стереть.</p>
-    <p><b>Пиано-ролл:</b> кнопка ♪ на дорожке. Призрачные (ghost) ряды — ноты выбранного лада; «ЛАД» подтягивает новые ноты в гамму. Клавиатура как в FL: белые/чёрные, жёлтая линия — граница октавы.</p>
+    <p><b>Пиано-ролл:</b> кнопка ♪ на дорожке. Инструменты как в FL: <b>✏️ карандаш</b> — ставит ноты (протяжка рисует, нота двигается перетаскиванием), <b>✖ ластик</b> — удаляет, <b>✋ рука</b> — листает. Призрачные ряды — ноты лада; «ЛАД» подтягивает новые ноты в гамму. Клавиатура белая/чёрная, жёлтая линия — граница октавы.</p>
     <p><b>Инструменты</b> — подключаемые плагины (см. SDK). Драм-дорожка тоже мелодична: сэмпл играется по нотам с изменением высоты.</p>
   </div>
   <div class="sect">SDK — подключить свой синтезатор / ромплер</div>
@@ -472,7 +491,7 @@ const SCALE_S={major:'MAJ',minor:'MIN',dorian:'DOR',phrygian:'PHR',lydian:'LYD',
 const inScale=n=>SCALES[S.scale].includes(((n-S.key)%12+12)%12);
 const N_LO=36,N_HI=84;
 
-/* ---- геометрия берётся из CSS-переменных, чтобы ноты/плейхед всегда попадали в сетку ---- */
+/* ---- геометрия из CSS-переменных ---- */
 let P=13,RH=10,HHg=80;
 function refreshMetrics(){
   const cs=getComputedStyle(document.documentElement);
@@ -483,6 +502,18 @@ function refreshMetrics(){
 window.addEventListener('resize',()=>{refreshMetrics();if(typeof renderGrid==='function')renderGrid();
   if(rollTr&&$('#shRoll').classList.contains('open')){buildRoll();renderNotes();}});
 window.addEventListener('orientationchange',()=>setTimeout(refreshMetrics,120));
+
+/* ---- пытаемся залочить ландшафт (Android) ---- */
+let lockTried=false;
+function tryLockLandscape(){if(lockTried)return;lockTried=true;
+ try{
+  const el=document.documentElement;
+  const goFS=el.requestFullscreen?el.requestFullscreen():Promise.reject();
+  Promise.resolve(goFS).then(()=>{
+   if(screen.orientation&&screen.orientation.lock)return screen.orientation.lock('landscape');
+  }).catch(()=>{});
+ }catch(e){}}
+document.addEventListener('pointerdown',tryLockLandscape,{once:true,passive:true});
 
 /* ================= state ================= */
 const DEF={bpm:120,bars:2,key:9,scale:'minor',swing:0,
@@ -692,7 +723,7 @@ function zipBlob(files){const enc=new TextEncoder(),parts=[],central=[];let off=
   ch.setUint32(16,c,true);ch.setUint32(20,dt.length,true);ch.setUint32(24,dt.length,true);
   ch.setUint16(28,nm.length,true);ch.setUint32(42,off,true);
   central.push(new Uint8Array(ch.buffer),nm);off+=30+nm.length+dt.length;}
- const cd=central.reduce((a,p)=>a+p.length,0),end=new DataView(new ArrayBuffer(22));
+  const cd=central.reduce((a,p)=>a+p.length,0),end=new DataView(new ArrayBuffer(22));
  end.setUint32(0,0x06054b50,true);end.setUint16(8,files.length,true);end.setUint16(10,files.length,true);
  end.setUint32(12,cd,true);end.setUint32(16,off,true);
  return new Blob([...parts,...central,new Uint8Array(end.buffer)],{type:'application/zip'});}
@@ -769,10 +800,20 @@ $('#addList').addEventListener('click',e=>{const o=e.target.closest('.opt');if(!
  closeSheet('shAdd');renderGrid();renderMix();selectTrack(tr.id);markDirty();});
 
 /* ================= piano roll ================= */
-let rollTr=null,rollSnap=2,snapToScale=true;
+let rollTr=null,rollSnap=2,snapToScale=true,rollTool='pen',rollDrag=null;
+function setRollTool(t){rollTool=t;
+ $('#toolPen').classList.toggle('on',t==='pen');
+ $('#toolErase').classList.toggle('on',t==='erase');
+ $('#toolHand').classList.toggle('on',t==='hand');
+ const w=$('#rbodywrap');
+ w.style.touchAction=t==='hand'?'auto':'none';
+ w.style.cursor=t==='pen'?'crosshair':t==='erase'?'pointer':'grab';}
+$('#toolPen').onclick=()=>setRollTool('pen');
+$('#toolErase').onclick=()=>setRollTool('erase');
+$('#toolHand').onclick=()=>setRollTool('hand');
 function openRoll(tr){rollTr=tr;$('#rollName').textContent=tr.name+' · PIANO ROLL';
  $('#rollInfo').textContent=tr.type==='sample'?'СЭМПЛ: '+((sampleById(tr.sound)||{}).name||'—'):PLUGS[tr.plug].name;
- updateRollScaleLbl();refreshMetrics();buildRoll();renderNotes();openSheet('shRoll');
+ updateRollScaleLbl();refreshMetrics();buildRoll();renderNotes();setRollTool(rollTool);openSheet('shRoll');
  const sc=$('#rollsc');sc.scrollTop=(N_HI-66)*RH;sc.scrollLeft=0;}
 function updateRollScaleLbl(){$('#rollScale').textContent=KN[S.key]+' '+SCALE_N[S.scale];}
 function buildRoll(){const rows=N_HI-N_LO+1,W=SONG()*P;
@@ -800,22 +841,51 @@ function snapNote(n){if(inScale(n))return n;const iv=SCALES[S.scale];const pc=((
 function renderNotes(){const hue=rollTr?hueOf(rollTr):'#ffb43a';
  $('#notelayer').innerHTML=(rollTr?rollTr.notes:[]).map((nn,i)=>
   `<div class="note" data-i="${i}" style="--th:${hue};left:${nn.t*P+1}px;width:${(nn.len||2)*P-3}px;top:${(N_HI-nn.n)*RH+1}px"></div>`).join('');}
-$('#rbodywrap').addEventListener('pointerdown',e=>{if(!rollTr)return;
- const note=e.target.closest('.note');
- if(note){rollTr.notes.splice(+note.dataset.i,1);renderNotes();markDirty();return;}
- const r=$('#rbodywrap').getBoundingClientRect();
- const col=clamp(Math.floor((e.clientX-r.left)/P),0,SONG()-1);
- let n=N_HI-clamp(Math.floor((e.clientY-r.top)/RH),0,N_HI-N_LO);
- if(snapToScale&&!inScale(n))n=snapNote(n);
+function cellAt(e){const r=$('#rbodywrap').getBoundingClientRect();
+ const col=Math.floor((e.clientX-r.left)/P),row=Math.floor((e.clientY-r.top)/RH);
+ if(col<0||col>=SONG()||row<0||row>N_HI-N_LO)return{col:null,row:null};return{col,row};}
+function addNote(col,n){if(rollTr.notes.some(x=>x.t===col&&x.n===n))return;
  rollTr.notes.push({t:col,n,len:rollSnap,v:.85});renderNotes();
- if(!playing)previewNote(rollTr,n);markDirty();});
+ if(!playing)previewNote(rollTr,n);markDirty();}
+function delNote(i){rollTr.notes.splice(i,1);renderNotes();markDirty();}
+const rwrap=$('#rbodywrap');
+rwrap.addEventListener('pointerdown',e=>{if(!rollTr)return;
+ if(rollTool==='hand')return;
+ e.preventDefault();
+ try{rwrap.setPointerCapture(e.pointerId);}catch(_){}
+ const note=e.target.closest('.note');
+ if(rollTool==='erase'){
+  if(note)delNote(+note.dataset.i);
+  rollDrag={mode:'erase'};return;}
+ if(note){const i=+note.dataset.i;const nn=rollTr.notes[i];
+  note.classList.add('drag');
+  rollDrag={mode:'move',idx:i,x0:e.clientX,y0:e.clientY,t0:nn.t,n0:nn.n,el:note};return;}
+ const c=cellAt(e);if(c.row===null)return;
+ let n=N_HI-c.row;if(snapToScale&&!inScale(n))n=snapNote(n);
+ addNote(c.col,n);rollDrag={mode:'draw',lastKey:c.col+':'+(N_HI-c.row)};});
+rwrap.addEventListener('pointermove',e=>{if(!rollDrag||!rollTr)return;
+ if(rollDrag.mode==='move'){
+  const nn=rollTr.notes[rollDrag.idx];if(!nn)return;
+  const dt=Math.round((e.clientX-rollDrag.x0)/P),dn=-Math.round((e.clientY-rollDrag.y0)/RH);
+  nn.t=clamp(rollDrag.t0+dt,0,SONG()-(nn.len||2));nn.n=clamp(rollDrag.n0+dn,N_LO,N_HI);
+  rollDrag.el.style.left=(nn.t*P+1)+'px';rollDrag.el.style.top=((N_HI-nn.n)*RH+1)+'px';return;}
+ const c=cellAt(e);if(c.row===null)return;
+ if(rollDrag.mode==='draw'){
+  const key=c.col+':'+c.row;if(key===rollDrag.lastKey)return;rollDrag.lastKey=key;
+  let n=N_HI-c.row;if(snapToScale&&!inScale(n))n=snapNote(n);addNote(c.col,n);return;}
+ if(rollDrag.mode==='erase'){
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const nt=el&&el.closest?el.closest('.note'):null;if(nt)delNote(+nt.dataset.i);}});
+function endRollDrag(){if(rollDrag){if(rollDrag.mode==='move'){rollDrag.el.classList.remove('drag');markDirty();}rollDrag=null;}}
+rwrap.addEventListener('pointerup',endRollDrag);
+rwrap.addEventListener('pointercancel',endRollDrag);
 $('#rkeys').addEventListener('pointerdown',e=>{const k=e.target.closest('.rkey');if(!k||!rollTr)return;previewNote(rollTr,+k.dataset.n);});
 function previewNote(tr,n){ensureAudio();const ch=ensureTrackChain(tr),t=ACTX.currentTime+.02;
  if(tr.type==='sample'){const b=getABuf(tr.sound);if(b)hitSample(ACTX,b,ch.g,t,.85,Math.pow(2,(n-60)/12));}
  else{let p=PL.get(tr.id);if(!p){p=PLUGS[tr.plug].create(ACTX,ch.g);PL.set(tr.id,p);}p.noteOn(t,n,.85);p.noteOff(t+.35,n);}}
 $('#snapRow').addEventListener('click',e=>{const b=e.target.closest('.snbtn');if(!b)return;
  if(b.id==='snapScale'){snapToScale=!snapToScale;b.classList.toggle('on',snapToScale);return;}
- rollSnap=+b.dataset.s;$$('#snapRow .snbtn[data-s]').forEach(x=>x.classList.toggle('on',x===b));});
+ if(b.dataset.s){rollSnap=+b.dataset.s;$$('#snapRow .snbtn[data-s]').forEach(x=>x.classList.toggle('on',x===b));}});
 $('#rollClear').onclick=()=>{if(rollTr&&confirm('Удалить все ноты дорожки?')){rollTr.notes=[];renderNotes();markDirty();}};
 
 /* ================= mixer ================= */
